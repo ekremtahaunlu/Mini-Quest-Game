@@ -8,16 +8,16 @@ public class PlayerController : MonoBehaviourPunCallbacks
 	[SerializeField] private float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
 
 	private float _verticalLookRotation;
-	private bool _grounded;
+	private bool _isGrounded;
 	private Vector3 _smoothMoveVelocity;
 	private Vector3 _moveAmount;
 
 	private Rigidbody _rb;
-
+	
 	private PhotonView _pv;
-	private object _playerManager;
+	private PlayerManager _playerManager;
 
-	void Awake()
+	private void Awake()
 	{
 		_rb = GetComponent<Rigidbody>();
 		_pv = GetComponent<PhotonView>();
@@ -26,8 +26,6 @@ public class PlayerController : MonoBehaviourPunCallbacks
 	private void Start()
 	{
 		if (_pv.IsMine)
-			return;
-		
 		{
 			Destroy(GetComponentInChildren<Camera>().gameObject);
 			Destroy(_rb);
@@ -61,9 +59,9 @@ public class PlayerController : MonoBehaviourPunCallbacks
 		_moveAmount = Vector3.SmoothDamp(_moveAmount, moveDir * (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed), ref _smoothMoveVelocity, smoothTime);
 	}
 
-	void Jump()
+	private void Jump()
 	{
-		if(Input.GetKeyDown(KeyCode.Space) && _grounded)
+		if(Input.GetKeyDown(KeyCode.Space) && _isGrounded)
 		{
 			_rb.AddForce(transform.up * jumpForce);
 		}
@@ -71,10 +69,10 @@ public class PlayerController : MonoBehaviourPunCallbacks
 
 	public void SetGroundedState(bool _grounded)
 	{
-		this._grounded = _grounded;
+		_isGrounded = _grounded;
 	}
 
-	void FixedUpdate()
+	private void FixedUpdate()
 	{
 		if(!_pv.IsMine)
 			return;
