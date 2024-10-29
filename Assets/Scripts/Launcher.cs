@@ -9,14 +9,14 @@ public class Launcher : MonoBehaviourPunCallbacks
 {
 	public static Launcher Instance;
 
-	[SerializeField] TMP_InputField roomNameInputField;
-	[SerializeField] TMP_Text errorText;
-	[SerializeField] TMP_Text roomNameText;
-	[SerializeField] Transform roomListContent;
-	[SerializeField] GameObject roomListItemPrefab;
-	[SerializeField] Transform playerListContent;
-	//[SerializeField] GameObject PlayerListItemPrefab;
-	[SerializeField] GameObject startGameButton;
+	[SerializeField] private TMP_InputField roomNameInputField;
+	[SerializeField] private TMP_Text errorText;
+	[SerializeField] private TMP_Text roomNameText;
+	[SerializeField] private Transform roomListContent;
+	[SerializeField] private GameObject roomListItemPrefab;
+	[SerializeField] private Transform playerListContent;
+	[SerializeField] private GameObject PlayerListItemPrefab;
+	[SerializeField] private GameObject startGameButton;
 
 	void Awake()
 	{
@@ -59,14 +59,9 @@ public class Launcher : MonoBehaviourPunCallbacks
 
 		Player[] players = PhotonNetwork.PlayerList;
 
-		foreach(Transform child in playerListContent)
-		{
-			Destroy(child.gameObject);
-		}
-
 		for(int i = 0; i < players.Count(); i++)
 		{
-			//Instantiate(PlayerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(players[i]);
+			Instantiate(PlayerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(players[i]);
 		}
 
 		startGameButton.SetActive(PhotonNetwork.IsMasterClient);
@@ -123,6 +118,6 @@ public class Launcher : MonoBehaviourPunCallbacks
 
 	public override void OnPlayerEnteredRoom(Player newPlayer)
 	{
-		//Instantiate(PlayerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(newPlayer);
+		Instantiate(PlayerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(newPlayer);
 	}
 }
