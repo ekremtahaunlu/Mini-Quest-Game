@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using TMPro;
@@ -39,7 +38,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 
 	public override void OnJoinedLobby()
 	{
-		//MenuManager.Instance.OpenMenu("title");
+		MenuManager.Instance.OpenMenu("title");
 		Debug.Log("Joined Lobby");
 	}
 
@@ -50,12 +49,12 @@ public class Launcher : MonoBehaviourPunCallbacks
 			return;
 		}
 		PhotonNetwork.CreateRoom(roomNameInputField.text);
-		//MenuManager.Instance.OpenMenu("loading");
+		MenuManager.Instance.OpenMenu("loading");
 	}
 
 	public override void OnJoinedRoom()
 	{
-		//MenuManager.Instance.OpenMenu("room");
+		MenuManager.Instance.OpenMenu("room");
 		roomNameText.text = PhotonNetwork.CurrentRoom.Name;
 
 		Player[] players = PhotonNetwork.PlayerList;
@@ -73,7 +72,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 		startGameButton.SetActive(PhotonNetwork.IsMasterClient);
 	}
 
-	/*public override void OnMasterClientSwitched(Player newMasterClient)
+	public override void OnMasterClientSwitched(Player newMasterClient)
 	{
 		startGameButton.SetActive(PhotonNetwork.IsMasterClient);
 	}
@@ -105,7 +104,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 	public override void OnLeftRoom()
 	{
 		MenuManager.Instance.OpenMenu("title");
-	}*/
+	}
 
 	public override void OnRoomListUpdate(List<RoomInfo> roomList)
 	{
@@ -118,7 +117,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 		{
 			if(roomList[i].RemovedFromList)
 				continue;
-			//Instantiate(roomListItemPrefab, roomListContent).GetComponent<RoomListItem>().SetUp(roomList[i]);
+			Instantiate(roomListItemPrefab, roomListContent).GetComponent<RoomListItem>().SetUp(roomList[i]);
 		}
 	}
 
