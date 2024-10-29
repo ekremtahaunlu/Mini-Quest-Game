@@ -2546,7 +2546,7 @@ namespace Photon.Pun
                 Debug.LogWarning("PUN is in development mode (development build). As the 'dev region' is not empty (" + PhotonServerSettings.DevRegion + ") it overrides the found best region. See PhotonServerSettings.");
 
                 string _finalDevRegion = PhotonServerSettings.DevRegion;
-                if (!_cachedRegionHandler.EnabledRegions.Any(p => p.Code == PhotonServerSettings.DevRegion))
+                if (_cachedRegionHandler.EnabledRegions.All(p => p.Code != PhotonServerSettings.DevRegion))
                 {
                     _finalDevRegion = _cachedRegionHandler.EnabledRegions[0].Code;
 
