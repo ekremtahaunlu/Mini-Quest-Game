@@ -1,82 +1,86 @@
 ﻿using Photon.Pun;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviourPunCallbacks
-{
-	[SerializeField] private GameObject cameraHolder;
+public class PlayerController : MonoBehaviour 
 
-	[SerializeField] private float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
+    { 
+        [SerializeField] private GameObject _cameraHolder; 
+        [SerializeField] private float _mouseSensitivity, _sprintSpeed, _walkSpeed, _jumpForce, _smoothTime;
+        
+        private float _verticalLookRotation;
+        private bool _grounded;
+        private Vector3 _smoothMoveVelocity;
+        private Vector3 _moveAmount;
+        
+        private Rigidbody _rigidbody;
+        private PhotonView _photonView;
 
-	private float _verticalLookRotation;
-	private bool _isGrounded;
-	private Vector3 _smoothMoveVelocity;
-	private Vector3 _moveAmount;
+        private void Awake()
+        {
+            _rigidbody = GetComponent<Rigidbody>();
+            _photonView = GetComponent<PhotonView>();
+        }
+        
+        private void Start()
+        {
+            if (_photonView.IsMine) return;
+            Destroy(GetComponentInChildren<Camera>().gameObject);
+            Destroy(_rigidbody);
+        }
 
-	private Rigidbody _rb;
-	
-	private PhotonView _pv;
-	private PlayerManager _playerManager;
+        private void Update()
+        {
+            if (!_photonView.IsMine)
+            {
+                return;
+            }
+            
+            Look();
 
-	private void Awake()
-	{
-		_rb = GetComponent<Rigidbody>();
-		_pv = GetComponent<PhotonView>();
-	}
+            Move();
 
-	private void Start()
-	{
-		if (_pv.IsMine)
-		{
-			Destroy(GetComponentInChildren<Camera>().gameObject);
-			Destroy(_rb);
-		}
-	}
+            Jump();
+            
+        }
 
-	private void Update()
-	{
-		if(!_pv.IsMine)
-			return;
+        private void Look()
+        {
+            transform.Rotate(Vector3.up * Input.GetAxisRaw("Mouse X") * _mouseSensitivity);
 
-		Look();
-		Move();
-		Jump();
-	}
+            _verticalLookRotation += Input.GetAxisRaw("Mouse Y") * _mouseSensitivity;
+            _verticalLookRotation = Mathf.Clamp(_verticalLookRotation, -90f, 90f);
 
-	private void Look()
-	{
-		transform.Rotate(Vector3.up * (Input.GetAxisRaw("Mouse X") * mouseSensitivity));
+            _cameraHolder.transform.localEulerAngles = Vector3.left * _verticalLookRotation;
+        }
+        
+        private void Move()
+        {
+            Vector3 moveDir = new Vector3(Input.GetAxisRaw("Horizontal"), 0 , Input.GetAxisRaw("Vertical")).normalized;
 
-		_verticalLookRotation += Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
-		_verticalLookRotation = Mathf.Clamp(_verticalLookRotation, -90f, 90f);
+            _moveAmount = Vector3.SmoothDamp(_moveAmount, moveDir * (Input.GetKey(KeyCode.LeftShift) ? _sprintSpeed : _walkSpeed), ref _smoothMoveVelocity, _smoothTime);
+        }
 
-		cameraHolder.transform.localEulerAngles = Vector3.left * _verticalLookRotation;
-	}
+        private void Jump()
+        {
+            if (Input.GetKeyDown(KeyCode.Space) && _grounded)
+            {
+                _rigidbody.AddForce(transform.up * _jumpForce);
+            }
+        }
 
-	private void Move()
-	{
-		Vector3 moveDir = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical")).normalized;
+        public void SetGroundedState(bool grounded)
+        {
+            _grounded = grounded;
+            
+        }
 
-		_moveAmount = Vector3.SmoothDamp(_moveAmount, moveDir * (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed), ref _smoothMoveVelocity, smoothTime);
-	}
-
-	private void Jump()
-	{
-		if(Input.GetKeyDown(KeyCode.Space) && _isGrounded)
-		{
-			_rb.AddForce(transform.up * jumpForce);
-		}
-	}
-
-	public void SetGroundedState(bool _grounded)
-	{
-		_isGrounded = _grounded;
-	}
-
-	private void FixedUpdate()
-	{
-		if(!_pv.IsMine)
-			return;
-
-		_rb.MovePosition(_rb.position + transform.TransformDirection(_moveAmount) * Time.fixedDeltaTime);
-	}
-}
+        private void FixedUpdate()
+        { 
+            if (!_photonView.IsMine)
+            {
+                return;
+            }
+            
+            _rigidbody.MovePosition(_rigidbody.position + transform.TransformDirection(_moveAmount) * Time.fixedDeltaTime);
+        }
+    }

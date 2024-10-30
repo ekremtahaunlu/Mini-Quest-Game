@@ -1,7 +1,5 @@
 using UnityEngine;
 using Photon.Pun;
-using Photon.Realtime;
-using System.Linq;
 using System.IO;
 
 public class PlayerManager : MonoBehaviour
@@ -15,19 +13,14 @@ public class PlayerManager : MonoBehaviour
 
 	private void Start()
 	{
-		if(_pv.IsMine)
+		if (_pv.IsMine)
 		{
 			CreateController();
 		}
 	}
 
-	private static void CreateController()
+	private void CreateController()
 	{
-		PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerController"), Vector3.zero, Quaternion.identity);
-	}
-
-	public static PlayerManager Find(Player player)
-	{
-		return FindObjectsOfType<PlayerManager>().SingleOrDefault(x => Equals(x._pv.Owner, player));
+		PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerController"), Vector3.up * 1.1f, Quaternion.identity);
 	}
 }
