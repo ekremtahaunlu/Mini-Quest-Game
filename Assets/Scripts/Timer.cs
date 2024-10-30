@@ -8,41 +8,47 @@ using TMPro;
 
 public class Timer : MonoBehaviour
 {
-	public TextMeshProUGUI time;
-	public bool count;
-	public int Time;
-	private Hashtable _setTime = new ();
+	public TextMeshProUGUI timeText;
+	private bool _count;
+	public int timeLeft;
+	private Hashtable _setTime = new();
 
 	private void Start()
 	{
-		count = true;
+		_count = true;
 	}
 
 	private void Update()
 	{
-		Time = (int)PhotonNetwork.CurrentRoom.CustomProperties["Time"];
-		float minutes = Mathf.FloorToInt((int)PhotonNetwork.CurrentRoom.CustomProperties["Time"] / 60);
-		float seconds = Mathf.FloorToInt((int)PhotonNetwork.CurrentRoom.CustomProperties["Time"] % 60);
-		
-		time.text = $"{minutes:00}:{seconds:00}";
+		timeLeft = (int)PhotonNetwork.CurrentRoom.CustomProperties["Time"];
+		float minutes = Mathf.FloorToInt(timeLeft / 60);
+		float seconds = Mathf.FloorToInt(timeLeft % 60);
+
+		timeText.text = $"{minutes:00}:{seconds:00}";
 
 		if (PhotonNetwork.IsMasterClient)
 		{
-			if (count)
+			if (_count)
 			{
-				count = false;
-				StartCoroutine(timer());
+				_count = false;
+				StartCoroutine(TimerCountdown());
 			}
 		}
 	}
 
-	IEnumerator timer()
+	IEnumerator TimerCountdown()
 	{
 		yield return new WaitForSeconds(1f);
-		int nextTime = Time -= 1;
-		_setTime["Time"] = nextTime;
-		PhotonNetwork.CurrentRoom.SetCustomProperties(_setTime);
-		//PhotonNetwork.CurrentRoom.CustomProperties["Time"] = nextTime;
-		count = true;
+		int nextTime = timeLeft - 1;
+		if (nextTime >= 0)
+		{
+			_setTime["Time"] = nextTime;
+			PhotonNetwork.CurrentRoom.SetCustomProperties(_setTime);
+			_count = true;
+		}
+		else
+		{
+			Time.timeScale = 0f;
+		}
 	}
 }
