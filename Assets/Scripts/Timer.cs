@@ -12,7 +12,7 @@ public class Timer : MonoBehaviour {
 
     private void Start() {
         if (PhotonNetwork.IsMasterClient) {
-            _setTime["Time"] = 180;
+            _setTime["Time"] = 30;
             PhotonNetwork.CurrentRoom.SetCustomProperties(_setTime);
         }
 
