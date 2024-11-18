@@ -1,54 +1,52 @@
-﻿using System;
+﻿using Photon.Pun;
 using System.Collections;
-using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
-using Photon.Pun;
-using TMPro;
 
-public class Timer : MonoBehaviour
-{
-	public TextMeshProUGUI timeText;
-	private bool _count;
-	public int timeLeft;
-	private Hashtable _setTime = new();
+public class Timer : MonoBehaviour {
+    public TextMeshProUGUI timeText;
+    private bool _count;
+    public int timeLeft;
+    private Hashtable _setTime = new();
 
-	private void Start()
-	{
-		_count = true;
-	}
+    private void Start() {
+        if (PhotonNetwork.IsMasterClient) {
+            _setTime["Time"] = 180;
+            PhotonNetwork.CurrentRoom.SetCustomProperties(_setTime);
+        }
 
-	private void Update()
-	{
-		timeLeft = (int)PhotonNetwork.CurrentRoom.CustomProperties["Time"];
-		float minutes = Mathf.FloorToInt(timeLeft / 60);
-		float seconds = Mathf.FloorToInt(timeLeft % 60);
+        _count = true;
+    }
 
-		timeText.text = $"{minutes:00}:{seconds:00}";
 
-		if (PhotonNetwork.IsMasterClient)
-		{
-			if (_count)
-			{
-				_count = false;
-				StartCoroutine(TimerCountdown());
-			}
-		}
-	}
+    private void Update() {
+        if (PhotonNetwork.CurrentRoom != null && PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Time")) {
+            timeLeft = (int)PhotonNetwork.CurrentRoom.CustomProperties["Time"];
+            float minutes = Mathf.FloorToInt(timeLeft / 60);
+            float seconds = Mathf.FloorToInt(timeLeft % 60);
 
-	IEnumerator TimerCountdown()
-	{
-		yield return new WaitForSeconds(1f);
-		int nextTime = timeLeft - 1;
-		if (nextTime >= 0)
-		{
-			_setTime["Time"] = nextTime;
-			PhotonNetwork.CurrentRoom.SetCustomProperties(_setTime);
-			_count = true;
-		}
-		else
-		{
-			Time.timeScale = 0f;
-		}
-	}
+            timeText.text = $"{minutes:00}:{seconds:00}";
+
+            if (PhotonNetwork.IsMasterClient) {
+                if (_count) {
+                    _count = false;
+                    StartCoroutine(TimerCountdown());
+                }
+            }
+        }
+    }
+
+
+    IEnumerator TimerCountdown() {
+        yield return new WaitForSeconds(1f);
+        int nextTime = timeLeft - 1;
+        if (nextTime >= 0) {
+            _setTime["Time"] = nextTime;
+            PhotonNetwork.CurrentRoom.SetCustomProperties(_setTime);
+            _count = true;
+        } else {
+            Time.timeScale = 0f;
+        }
+    }
 }
