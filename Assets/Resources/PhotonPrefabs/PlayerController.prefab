@@ -387,3 +387,4 @@ MonoBehaviour:
   _walkSpeed: 7
   _jumpForce: 150
   _smoothTime: 0.15
+  _collectRange: 2
