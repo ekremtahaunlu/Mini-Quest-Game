@@ -15,33 +15,93 @@ public class PlayerController : MonoBehaviour {
     private PhotonView _photonView;
     private GameObject _lastCollectedObject;
 
+    private int _score;
+    internal object photonView;
+
     private void Awake() {
         _rigidbody = GetComponent<Rigidbody>();
         _photonView = GetComponent<PhotonView>();
     }
 
     private void Start() {
-        if (_photonView.IsMine) return;
-        Destroy(GetComponentInChildren<Camera>().gameObject);
-        Destroy(_rigidbody);
+        if (!_photonView.IsMine) {
+            Destroy(GetComponentInChildren<Camera>().gameObject);
+            Destroy(_rigidbody);
+        }
     }
 
     private void Update() {
-        if (!_photonView.IsMine) {
-            return;
-        }
+        if (!_photonView.IsMine || !FindObjectOfType<GameManager>().IsGameActive()) return;
 
         if (Input.GetKeyDown(KeyCode.E)) {
-            Collect(); // E tuşu ile toplama
+            Collect();
         }
 
         if (Input.GetKeyDown(KeyCode.R)) {
-            DropLastCollected(); // R tuşu ile bırakma
+            DropLastCollected();
         }
 
         Look();
         Move();
         Jump();
+    }
+
+    private void Collect() {
+        if (_lastCollectedObject != null) {
+            Debug.Log("Zaten bir obje topladınız.");
+            return;
+        }
+
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, _collectRange);
+        foreach (Collider hitCollider in hitColliders) {
+            if (hitCollider.CompareTag("Collectible")) {
+                _lastCollectedObject = hitCollider.gameObject;
+                _lastCollectedObject.SetActive(false);
+                Debug.Log("Obje toplandı: " + _lastCollectedObject.name);
+                return;
+            }
+        }
+
+        Debug.Log("Toplanacak obje yok.");
+    }
+
+    private void DropLastCollected() {
+        if (_lastCollectedObject == null) {
+            Debug.Log("Bırakacak bir obje yok.");
+            return;
+        }
+
+        Vector3 dropPosition = transform.position + transform.forward * 2f;
+        _lastCollectedObject.transform.position = dropPosition;
+        _lastCollectedObject.SetActive(true);
+
+        Rigidbody rb = _lastCollectedObject.GetComponent<Rigidbody>();
+        if (rb == null) {
+            rb = _lastCollectedObject.AddComponent<Rigidbody>();
+        }
+        rb.isKinematic = false;
+        rb.useGravity = true;
+
+        Debug.Log("Obje bırakıldı: " + _lastCollectedObject.name);
+        _lastCollectedObject = null;
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        if (other.CompareTag("FloorEnd") && _lastCollectedObject != null) {
+            _score++;
+            PhotonNetwork.Destroy(_lastCollectedObject);
+            _lastCollectedObject = null;
+
+            Debug.Log("Skor: " + _score);
+        }
+    }
+
+    public int GetScore() {
+        return _score;
+    }
+
+    public void SetGroundedState(bool grounded) {
+        _grounded = grounded;
     }
 
     private void Look() {
@@ -65,60 +125,9 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    private void Collect() {
-        if (_lastCollectedObject != null) {
-            Debug.Log("Zaten bir obje topladınız.");
-            return;
-        }
-
-        Collider[] hitColliders = Physics.OverlapSphere(transform.position, _collectRange);
-        foreach (Collider hitCollider in hitColliders) {
-            if (hitCollider.CompareTag("Collectible")) {
-                _lastCollectedObject = hitCollider.gameObject;
-                _lastCollectedObject.SetActive(false); // Objeyi devre dışı bırak
-                Debug.Log("Obje toplandı: " + _lastCollectedObject.name);
-                return; // İlk uygun objeyi bulunca işlemi sonlandır
-            }
-        }
-
-        Debug.Log("Toplanacak obje yok.");
-    }
-
-    private void DropLastCollected() {
-        if (_lastCollectedObject == null) {
-            Debug.Log("Bırakacak bir obje yok.");
-            return;
-        }
-
-        Vector3 dropPosition = transform.position + transform.forward * 2f; // Objeyi oyuncunun önüne bırak
-        _lastCollectedObject.transform.position = dropPosition;
-        _lastCollectedObject.SetActive(true); // Objeyi tekrar aktif et
-
-        Rigidbody rb = _lastCollectedObject.GetComponent<Rigidbody>();
-        if (rb == null) {
-            rb = _lastCollectedObject.AddComponent<Rigidbody>();
-        }
-        rb.isKinematic = false;
-        rb.useGravity = true;
-
-        Debug.Log("Obje bırakıldı: " + _lastCollectedObject.name);
-        _lastCollectedObject = null; // Referansı sıfırla
-    }
-
-    public void SetGroundedState(bool grounded) {
-        _grounded = grounded;
-    }
-
     private void FixedUpdate() {
-        if (!_photonView.IsMine) {
-            return;
-        }
+        if (!_photonView.IsMine) return;
 
         _rigidbody.MovePosition(_rigidbody.position + transform.TransformDirection(_moveAmount) * Time.fixedDeltaTime);
-    }
-
-    private void OnDrawGizmosSelected() {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, _collectRange);
     }
 }
